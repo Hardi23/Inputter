@@ -27,7 +27,11 @@ To create a custom constraint function, your function should follow some simple 
 3. The function should return an Optional type and return None if checking was not successful
 
 Example:
+
 ```python
+import Inputter
+
+
 def is_integer_in_range(input_str: str, min_val: int, max_val: int) -> Optional[int]:
     try:
         int_val = int(input_str)
@@ -38,6 +42,9 @@ def is_integer_in_range(input_str: str, min_val: int, max_val: int) -> Optional[
     except ValueError:
         print_warning("Input is not an integer")
         return None
+
+
+user_input = Inputter.get_input("Input: ", is_integer_in_range, [0, 100])
 ```
 As shown in the example to keep the look of printed text the same,
 you should use the print_error and print_warning function of Inputter

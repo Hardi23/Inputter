@@ -17,18 +17,24 @@ class TermColors:
 
 WARNING_FORMAT_STR = "{}[WARNING]{} - {}"
 ERROR_FORMAT_STR = "{}[ERROR]{} - {}"
+INFO_FORMAT_STR = "{}[INFO]{} - {}"
+INPUT_FORMAT_STR = "{}[INPUT]{} - {}"
 ERROR_EXCEEDED_RETRIES = "Too many bad inputs!"
+
+format_prompt = False
 
 
 def is_directory(input_str: str) -> Optional[str]:
     if input_str is not None and os.path.isdir(input_str):
         return input_str
+    print_warning(f"{input_str} is not a valid directory!")
     return None
 
 
 def is_file(input_str: str) -> Optional[str]:
     if input_str is not None and os.path.isfile(input_str):
         return input_str
+    print_warning(f"{input_str} is not a valid file!")
     return None
 
 
@@ -37,6 +43,16 @@ def is_int(input_str: str) -> Optional[int]:
         int_val = int(input_str)
         return int_val
     except ValueError:
+        print_warning(f"{input_str} is not an integer!")
+        return None
+
+
+def is_float(input_str: str) -> Optional[float]:
+    try:
+        float_val = float(input_str)
+        return float_val
+    except ValueError:
+        print_warning(f"{input_str} is not a decimal number!")
         return None
 
 
@@ -65,6 +81,10 @@ def print_error(msg: str):
 
 def print_warning(msg: str):
     print(WARNING_FORMAT_STR.format(TermColors.YELLOW, TermColors.ENDC, msg))
+
+
+def print_info(msg: str):
+    print(INFO_FORMAT_STR.format(TermColors.OKCYAN, TermColors.ENDC, msg))
 
 
 def check_constraint_function(function: callable = None, params: list = None) -> bool:
@@ -96,9 +116,7 @@ def check_constraint_function(function: callable = None, params: list = None) ->
             if param.annotation is not None and type(params[index - 1]) is not param.annotation:
                 print_warning(f"Constraint function parameter {index + 1} is specified as"
                               f" {param.annotation}, passed argument will be of type "
-                              f"{type(params[index])}")
-    if params is not None:
-        pass
+                              f"{type(params[index - 1])}")
     return True
 
 
@@ -106,13 +124,16 @@ def test_input(function: callable, params: list) -> bool:
     return function(*params)
 
 
-def get_input(prompt, f_constraint: callable = not_empty, f_additional_params=None, max_tries: int = -1) -> Optional:
+def get_input(prompt, f_constraint: callable = not_empty,
+              f_additional_params: list = None, max_tries: int = -1) -> Optional:
     if f_additional_params is None:
         f_additional_params = []
     if f_constraint is not None and not check_constraint_function(f_constraint, f_additional_params):
         return None
     output = None
     counter = 0
+    if format_prompt:
+        prompt = INPUT_FORMAT_STR.format(TermColors.OKGREEN, TermColors.ENDC, prompt)
     while output is None:
         if 0 < max_tries <= counter:
             print_error(ERROR_EXCEEDED_RETRIES)
@@ -128,4 +149,7 @@ def get_input(prompt, f_constraint: callable = not_empty, f_additional_params=No
 
 
 if __name__ == '__main__':
-    print(f"You typed: {get_input('Running main, give me some input: ')}")
+    # print(f"You typed: {get_input('Running main, give me some input: ')}")
+    format_prompt = True
+    a = get_input("Float pls: ", is_float, max_tries=5)
+    print_info(f"You typed: {a}")
