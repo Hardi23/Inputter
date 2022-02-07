@@ -10,6 +10,7 @@ ___
 Clone or download the Inputter.py file.
 
 ```python
+import Inputter
 # Inputter.get_input(prompt, f_constraint: callable = not_empty, f_additional_params=None, max_tries: int = -1) -> Optional:
 in_str = Inputter.get_input("Prompt: ", constraint_function, [additional, parameters], max_tries=5)
 
@@ -19,7 +20,17 @@ in_str = Inputter.get_input("Prompt: ", constraint_function, [additional, parame
 # f_additional_params: List of parameters to supply to the constraint function.
 # max_tries: Negative for no limit, otherwise cancel after x and show error.
 ```
+### Flags
 
+```python
+# Available flags are:
+import Inputter
+
+Inputter.format_prompt = (True / False) # Format the input prompt with badge and color
+Inputter.silent = (True / False) # Suppresses or enables all output except prompting
+Inputter.disable_colors = (True / False) # Enables / Disables colored output but keeps badges
+Inputter.disable_badges = (True / False) # Enables / Disables badges in output
+```
 ### Creating new constraint functions
 To create a custom constraint function, your function should follow some simple rules
 1. Accept str as first parameter, this will be the user input

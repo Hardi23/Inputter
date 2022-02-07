@@ -21,7 +21,10 @@ INFO_FORMAT_STR = "{}[INFO]{} - {}"
 INPUT_FORMAT_STR = "{}[INPUT]{} - {}"
 ERROR_EXCEEDED_RETRIES = "Too many bad inputs!"
 
-format_prompt = False
+format_prompt = True
+silent = False
+disable_colors = False
+disable_badges = False
 
 
 def is_directory(input_str: str) -> Optional[str]:
@@ -76,15 +79,18 @@ def not_empty(input_str: str) -> Optional[str]:
 
 
 def print_error(msg: str):
-    print(ERROR_FORMAT_STR.format(TermColors.RED, TermColors.ENDC, msg))
+    if not silent:
+        print(ERROR_FORMAT_STR, msg, TermColors.RED)
 
 
 def print_warning(msg: str):
-    print(WARNING_FORMAT_STR.format(TermColors.YELLOW, TermColors.ENDC, msg))
+    if not silent:
+        print(WARNING_FORMAT_STR, msg, TermColors.YELLOW)
 
 
 def print_info(msg: str):
-    print(INFO_FORMAT_STR.format(TermColors.OKCYAN, TermColors.ENDC, msg))
+    if not silent:
+        print(format_for_output(INFO_FORMAT_STR, msg, TermColors.OKCYAN))
 
 
 def check_constraint_function(function: callable = None, params: list = None) -> bool:
@@ -120,6 +126,15 @@ def check_constraint_function(function: callable = None, params: list = None) ->
     return True
 
 
+def format_for_output(to_format: str, msg: str, color) -> str:
+    if disable_colors:
+        return to_format.format("", "", msg)
+    elif disable_badges:
+        return msg
+    else:
+        return to_format.format(color, TermColors.ENDC, msg)
+
+
 def test_input(function: callable, params: list) -> bool:
     return function(*params)
 
@@ -133,7 +148,7 @@ def get_input(prompt, f_constraint: callable = not_empty,
     output = None
     counter = 0
     if format_prompt:
-        prompt = INPUT_FORMAT_STR.format(TermColors.OKGREEN, TermColors.ENDC, prompt)
+        prompt = format_for_output(INPUT_FORMAT_STR, prompt, TermColors.OKGREEN)
     while output is None:
         if 0 < max_tries <= counter:
             print_error(ERROR_EXCEEDED_RETRIES)
@@ -149,7 +164,5 @@ def get_input(prompt, f_constraint: callable = not_empty,
 
 
 if __name__ == '__main__':
-    # print(f"You typed: {get_input('Running main, give me some input: ')}")
-    format_prompt = True
-    a = get_input("Float pls: ", is_float, max_tries=5)
+    a = get_input("Give me some input: ", max_tries=5)
     print_info(f"You typed: {a}")
