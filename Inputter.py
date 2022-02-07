@@ -80,12 +80,12 @@ def not_empty(input_str: str) -> Optional[str]:
 
 def print_error(msg: str):
     if not silent:
-        print(ERROR_FORMAT_STR, msg, TermColors.RED)
+        print(format_for_output(ERROR_FORMAT_STR, msg, TermColors.RED))
 
 
 def print_warning(msg: str):
     if not silent:
-        print(WARNING_FORMAT_STR, msg, TermColors.YELLOW)
+        print(format_for_output(WARNING_FORMAT_STR, msg, TermColors.YELLOW))
 
 
 def print_info(msg: str):
