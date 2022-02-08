@@ -7,12 +7,15 @@ Feel free to submit pull requests.
 ## Usage
 ___
 ### Use Inputter in your code
-Clone or download the Inputter.py file.
+Clone or download the Inputter.py file or install via pip.
+```
+pip install inputtr
+```
 
 ```python
-import Inputter
+from inputtr import inputter
 # Inputter.get_input(prompt, f_constraint: callable = not_empty, f_additional_params=None, max_tries: int = -1) -> Optional:
-in_str = Inputter.get_input("Prompt: ", constraint_function, [additional, parameters], max_tries=5)
+in_str = inputter.get_input("Prompt: ", constraint_function, [additional, parameters], max_tries=5)
 
 # prompt: The prompt which is shown when input is required.
 # f_constraint: Constraint function to check the input against,
