@@ -27,12 +27,13 @@ in_str = inputter.get_input("Prompt: ", constraint_function, [additional, parame
 
 ```python
 # Available flags are:
-import Inputter
+from inputtr import inputter
 
-Inputter.format_prompt = (True / False) # Format the input prompt with badge and color
-Inputter.silent = (True / False) # Suppresses or enables all output except prompting
-Inputter.disable_colors = (True / False) # Enables / Disables colored output but keeps badges
-Inputter.disable_badges = (True / False) # Enables / Disables badges in output
+inputter.format_prompt = (True / False) # Format the input prompt with badge and color (Default: True)
+inputter.silent = (True / False) # Suppresses or enables all output except prompting (Default: False)
+inputter.disable_colors = (True / False) # Enables / Disables colored output but keeps badges  (Default: False)
+inputter.disable_badges = (True / False) # Enables / Disables badges in output  (Default: False)
+inputter.throw_on_constraint_func_error = (True / False) # Changes constraint function error behaviour  (Default: False)
 ```
 ### Creating new constraint functions
 To create a custom constraint function, your function should follow some simple rules
@@ -40,10 +41,18 @@ To create a custom constraint function, your function should follow some simple 
 2. To generate warnings without crashes your function should supply parameter types
 3. The function should return an Optional type and return None if checking was not successful
 
+Your function will be checked before trying to execute it, any minor errors will be output as warnings.
+
+Errors which would crash execution will be output as errors and the ```get_input() ``` returns ```None```, this behaviour
+can be changed with the flag mentioned above in which case a RuntimeError is also thrown.
+
+The only exception to this, is the case where you do not supply enough parameters, and the constraint function
+does not have sufficient default parameters in which case a TypeError is always thrown.
+
 Example:
 
 ```python
-import Inputter
+from inputtr import inputter
 
 
 def is_integer_in_range(input_str: str, min_val: int, max_val: int) -> Optional[int]:
@@ -61,4 +70,29 @@ def is_integer_in_range(input_str: str, min_val: int, max_val: int) -> Optional[
 user_input = Inputter.get_input("Input: ", is_integer_in_range, [0, 100])
 ```
 As shown in the example to keep the look of printed text the same,
-you should use the print_error and print_warning function of Inputter
+you should use the print_error and print_warning function of Inputter.
+
+### Changing colors and formatting
+___
+Inputter has a selection of colors and modifiers to choose from,
+the ones available can be accessed via the TermColors class.
+
+Since we are dealing with console output the colors are determined by ANSI escape sequences,
+to get more information about this read: https://en.wikipedia.org/wiki/ANSI_escape_code
+
+```python
+from inputtr import inputter
+
+inputter.info_color = inputter.TermColors.OKBLUE
+inputter.error_color = inputter.TermColors.RED
+inputter.prompt_color = inputter.TermColors.OKGREEN
+inputter.warning_color = inputter.TermColors.YELLOW
+```
+
+All of these colors can of course also be combined with formatting changes.
+
+```python
+from inputtr import inputter
+
+Inputter.prompt_color = inputter.TermColors.OKGREEN + inputter.TermColors.BOLD
+```

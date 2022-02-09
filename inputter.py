@@ -1,5 +1,6 @@
 import inspect
 import os
+import sys
 from typing import Optional
 
 
@@ -25,6 +26,12 @@ format_prompt = True
 silent = False
 disable_colors = False
 disable_badges = False
+throw_on_constraint_func_error = False
+
+error_color = TermColors.RED
+warning_color = TermColors.YELLOW
+info_color = TermColors.OKCYAN
+prompt_color = TermColors.OKGREEN
 
 
 def is_directory(input_str: str) -> Optional[str]:
@@ -80,17 +87,23 @@ def not_empty(input_str: str) -> Optional[str]:
 
 def print_error(msg: str):
     if not silent:
-        print(format_for_output(ERROR_FORMAT_STR, msg, TermColors.RED))
+        print(format_for_output(ERROR_FORMAT_STR, msg, error_color))
 
 
 def print_warning(msg: str):
     if not silent:
-        print(format_for_output(WARNING_FORMAT_STR, msg, TermColors.YELLOW))
+        print(format_for_output(WARNING_FORMAT_STR, msg, warning_color))
 
 
 def print_info(msg: str):
     if not silent:
-        print(format_for_output(INFO_FORMAT_STR, msg, TermColors.OKCYAN))
+        print(format_for_output(INFO_FORMAT_STR, msg, info_color))
+
+
+def print_constraint_func_error(msg: str):
+    print_error(msg)
+    if throw_on_constraint_func_error:
+        raise RuntimeError(msg)
 
 
 def check_constraint_function(function: callable = None, params: list = None) -> bool:
@@ -98,26 +111,28 @@ def check_constraint_function(function: callable = None, params: list = None) ->
         print_warning("No input constraint function specified!")
         return True
     if not (callable(function)):
-        print_error("Constraint function is not of type Callable!")
+        print_constraint_func_error("Constraint function is not of type Callable!")
         return False
     func_sig = inspect.signature(function)
     func_params = func_sig.parameters.values()
     func_param_count = len(func_params)
     if func_param_count == 0:
-        print_error("Constraint function does not accept parameters,"
-                    " the function should accept at least one parameter of type str.\n"
-                    "You can pass None, Default is not_empty")
+        print_constraint_func_error("Constraint function does not accept parameters,"
+                                    " the function should accept at least one parameter of type str.\n"
+                                    "You can pass None as your constraint_function, Default is not_empty")
         return False
     passing_param_count = len(params) + 1
     if passing_param_count > func_param_count:
-        print_error("Constraint function accepts less parameters than would be passed!")
+        print_constraint_func_error("Constraint function accepts less parameters than would be passed!")
         return False
 
     for index, param in enumerate(func_params):
         if index == 0:
             if param.annotation is not None and param.annotation is not str:
-                print_error("First parameter of constraint function must be of type str!")
+                print_constraint_func_error("First parameter of constraint function must be of type str!")
                 return False
+        elif index > len(params):
+            break
         else:
             if param.annotation is not None and type(params[index - 1]) is not param.annotation:
                 print_warning(f"Constraint function parameter {index + 1} is specified as"
@@ -148,7 +163,7 @@ def get_input(prompt, f_constraint: callable = not_empty,
     output = None
     counter = 0
     if format_prompt:
-        prompt = format_for_output(INPUT_FORMAT_STR, prompt, TermColors.OKGREEN)
+        prompt = format_for_output(INPUT_FORMAT_STR, prompt, prompt_color)
     while output is None:
         if 0 < max_tries <= counter:
             print_error(ERROR_EXCEEDED_RETRIES)
