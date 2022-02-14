@@ -1,3 +1,4 @@
+import getpass
 import inspect
 import os
 import sys
@@ -168,7 +169,12 @@ def get_input(prompt, f_constraint: callable = not_empty,
         if 0 < max_tries <= counter:
             print_error(ERROR_EXCEEDED_RETRIES)
             return None
-        in_str = input(prompt)
+        try:
+            in_str = input(prompt)
+        except KeyboardInterrupt:
+            print()
+            print_error("Caught Ctrl + C exiting.")
+            sys.exit(-1)
         if f_constraint is not None:
             param_list = [in_str, *f_additional_params]
             output = test_input(f_constraint, param_list)
