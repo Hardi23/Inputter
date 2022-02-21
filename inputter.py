@@ -1,7 +1,7 @@
-import getpass
 import inspect
 import os
 import sys
+import getpass
 from typing import Optional
 
 
@@ -17,6 +17,8 @@ class TermColors:
     UNDERLINE = '\033[4m'
 
 
+WINDOWS_PLATFORM = "win32"
+
 WARNING_FORMAT_STR = "{}[WARNING]{} - {}"
 ERROR_FORMAT_STR = "{}[ERROR]{} - {}"
 INFO_FORMAT_STR = "{}[INFO]{} - {}"
@@ -27,12 +29,22 @@ format_prompt = True
 silent = False
 disable_colors = False
 disable_badges = False
+nt_disable_colors = True
 throw_on_constraint_func_error = False
 
 error_color = TermColors.RED
 warning_color = TermColors.YELLOW
 info_color = TermColors.OKCYAN
 prompt_color = TermColors.OKGREEN
+
+
+def get_confirmation(input_str: str) -> Optional[bool]:
+    if input_str is not None and input_str.lower() in ["yes", "y"]:
+        return True
+    elif input_str.lower() in ["no", "n"]:
+        return False
+    print_warning("Value has to be one of [yes, y, no, n]")
+    return None
 
 
 def is_directory(input_str: str) -> Optional[str]:
@@ -68,9 +80,10 @@ def is_float(input_str: str) -> Optional[float]:
 
 
 def is_integer_in_range(input_str: str, min_val: int, max_val: int) -> Optional[int]:
+    upper_bound, lower_bound = (max_val, min_val) if max_val > min_val else (min_val, max_val)
     try:
         int_val = int(input_str)
-        if int_val < min_val or int_val > max_val:
+        if int_val < lower_bound or int_val > upper_bound:
             print_warning(f"Value should be in range {min_val} - {max_val}")
             return None
         return int_val
@@ -147,6 +160,8 @@ def format_for_output(to_format: str, msg: str, color) -> str:
         return to_format.format("", "", msg)
     elif disable_badges:
         return msg
+    elif nt_disable_colors and sys.platform.startswith(WINDOWS_PLATFORM):
+        return to_format.format("", "", msg)
     else:
         return to_format.format(color, TermColors.ENDC, msg)
 
@@ -156,7 +171,8 @@ def test_input(function: callable, params: list) -> bool:
 
 
 def get_input(prompt, f_constraint: callable = not_empty,
-              f_additional_params: list = None, max_tries: int = -1) -> Optional:
+              f_additional_params: list = None, max_tries: int = -1,
+              input_visible: bool = True) -> Optional:
     if f_additional_params is None:
         f_additional_params = []
     if f_constraint is not None and not check_constraint_function(f_constraint, f_additional_params):
@@ -170,7 +186,10 @@ def get_input(prompt, f_constraint: callable = not_empty,
             print_error(ERROR_EXCEEDED_RETRIES)
             return None
         try:
-            in_str = input(prompt)
+            if input_visible:
+                in_str = input(prompt)
+            else:
+                in_str = getpass.getpass(prompt=prompt)
         except KeyboardInterrupt:
             print()
             print_error("Caught Ctrl + C exiting.")
@@ -185,5 +204,5 @@ def get_input(prompt, f_constraint: callable = not_empty,
 
 
 if __name__ == '__main__':
-    a = get_input("Give me some input: ", max_tries=5)
+    a = get_input("Give me some input: ", get_confirmation, max_tries=5)
     print_info(f"You typed: {a}")

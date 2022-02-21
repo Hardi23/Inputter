@@ -1,4 +1,5 @@
 import io
+import os
 import unittest
 from typing import Optional
 from unittest.mock import patch
@@ -9,7 +10,6 @@ ERROR_TOO_MANY_INPUTS = "Too many bad inputs!"
 
 PROMPT = "Input: "
 MAX_TRIES = 5
-# TODO: testing
 
 
 def run_collecting_stdout(function, args):
@@ -113,6 +113,28 @@ class TestMaxTries(unittest.TestCase):
         self.assertEqual(result, None) and self.assertEqual(msg_buf, '\033[91m[ERROR]\033[0m - Too many bad inputs!')
 
 
+class TestYesNo(unittest.TestCase):
+    def test_yes(self):
+        msg_buf, result = run_collecting_stdout(run_overriding_input, ["yes", inputter.get_confirmation, []])
+        self.assertEqual(True, result)
+
+    def test_y(self):
+        msg_buf, result = run_collecting_stdout(run_overriding_input, ["y", inputter.get_confirmation, []])
+        self.assertEqual(True, result)
+
+    def test_no(self):
+        msg_buf, result = run_collecting_stdout(run_overriding_input, ["NO", inputter.get_confirmation, []])
+        self.assertEqual(False, result)
+
+    def test_n(self):
+        msg_buf, result = run_collecting_stdout(run_overriding_input, ["n", inputter.get_confirmation, []])
+        self.assertEqual(False, result)
+
+    def test_wrong_input(self):
+        msg_buf, result = run_collecting_stdout(run_overriding_input, ["123", inputter.get_confirmation, []])
+        self.assertEqual(None, result)
+
+
 def bad_func():
     pass
 
@@ -131,48 +153,72 @@ def bad_types(p1: str, p2: int = 3, p3: int = 2) -> Optional[int]:
 
 class TestBadConstraintFunction(unittest.TestCase):
     def test_bad_func(self):
+        inputter.nt_disable_colors = False
         msg_buf, result = run_collecting_stdout(run_overriding_input, ["a", bad_func, []])
         self.assertEqual(result, None)
         self.assertEqual(msg_buf,
                          "\033[91m[ERROR]\033[0m - Constraint function does not accept parameters,"
                          " the function should accept at least one parameter of type str.\nYou can pass None as your"
                          " constraint_function, Default is not_empty\n")
+        inputter.nt_disable_colors = True
 
     def test_too_many_arguments(self):
+        inputter.nt_disable_colors = False
         msg_buf, result = run_collecting_stdout(run_overriding_input, ["a", not_enough_args, [1, 2, 3]])
         self.assertEqual(result, None)
         self.assertEqual(msg_buf, "\033[91m[ERROR]\033[0m - Constraint function accepts less parameters"
                                   " than would be passed!\n")
+        inputter.nt_disable_colors = True
 
     def test_first_arg_not_string(self):
+        inputter.nt_disable_colors = False
         msg_buf, result = run_collecting_stdout(run_overriding_input, ["a", bad_first_arg, []])
         self.assertEqual(result, None)
         self.assertEqual(msg_buf, "\033[91m[ERROR]\033[0m - First parameter of constraint function"
                                   " must be of type str!\n")
+        inputter.nt_disable_colors = True
 
     def test_bad_annotation(self):
+        inputter.nt_disable_colors = False
         msg_buf, result = run_collecting_stdout(inputter.check_constraint_function, [bad_types, [2, "2"]])
         self.assertEqual(result, True)
         self.assertEqual(msg_buf, "\033[93m[WARNING]\033[0m - Constraint function parameter 3 is specified as"
                                   " <class \'int\'>, passed argument will be of type <class \'str\'>\n")
+        inputter.nt_disable_colors = True
 
     def test_constraint_func_none(self):
+        inputter.nt_disable_colors = False
         msg_buf, result = run_collecting_stdout(inputter.check_constraint_function, [None, []])
         self.assertEqual(result, True)
         self.assertEqual(msg_buf, "\033[93m[WARNING]\033[0m - No input constraint function specified!\n")
+        inputter.nt_disable_colors = True
 
 
 # noinspection PyMethodMayBeStatic
 class OutputTest(unittest.TestCase):
     def test_warning_output(self):
+        inputter.nt_disable_colors = False
         msg_buf, value = run_collecting_stdout(inputter.print_warning, ["msg"])
         self.assertEqual(value, None)
         self.assertEqual(msg_buf, "\033[93m[WARNING]\033[0m - msg\n")
+        inputter.nt_disable_colors = True
+
+    def test_warning_output_nt(self):
+        msg_buf, value = run_collecting_stdout(inputter.print_warning, ["msg"])
+        self.assertEqual(value, None)
+        self.assertEqual(msg_buf, "[WARNING] - msg\n")
 
     def test_error_output(self):
+        inputter.nt_disable_colors = False
         msg_buf, value = run_collecting_stdout(inputter.print_error, ["msg"])
         self.assertEqual(value, None)
         self.assertEqual(msg_buf, "\033[91m[ERROR]\033[0m - msg\n")
+        inputter.nt_disable_colors = True
+
+    def test_error_output_nt(self):
+        msg_buf, value = run_collecting_stdout(inputter.print_error, ["msg"])
+        self.assertEqual(value, None)
+        self.assertEqual(msg_buf, "[ERROR] - msg\n")
 
     def test_no_color_out(self):
         inputter.disable_colors = True

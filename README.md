@@ -14,14 +14,15 @@ pip install inputtr
 
 ```python
 from inputtr import inputter
-# Inputter.get_input(prompt, f_constraint: callable = not_empty, f_additional_params=None, max_tries: int = -1) -> Optional:
-in_str = inputter.get_input("Prompt: ", constraint_function, [additional, parameters], max_tries=5)
+# Inputter.get_input(prompt: str, f_constraint: callable = not_empty, f_additional_params: list = None, max_tries: int = -1) -> Optional:
+in_str = inputter.get_input("Prompt: ", constraint_function, [additional, parameters], max_tries=5, input_visible=(True / False))
 
-# prompt: The prompt which is shown when input is required.
+# prompt: The prompt to show to the user.
 # f_constraint: Constraint function to check the input against,
 #               this function is also allowed to transform the output.
 # f_additional_params: List of parameters to supply to the constraint function.
-# max_tries: Negative for no limit, otherwise cancel after x and show error.
+# max_tries: Negative for no limit, otherwise cancel after x tries and print error.
+# input_visible: Toggles echoing of input, set to False for passwords (Default: True).
 ```
 ### Flags
 
@@ -34,6 +35,7 @@ inputter.silent = (True / False) # Suppresses or enables all output except promp
 inputter.disable_colors = (True / False) # Enables / Disables colored output but keeps badges  (Default: False)
 inputter.disable_badges = (True / False) # Enables / Disables badges in output  (Default: False)
 inputter.throw_on_constraint_func_error = (True / False) # Changes constraint function error behaviour  (Default: False)
+inputter.nt_disable_colors = (True / False) # Since ANSI Codes are not supported in windows consoles you can toggle colors for windows specifically (Default: True)
 ```
 ### Creating new constraint functions
 To create a custom constraint function, your function should follow some simple rules
@@ -71,6 +73,20 @@ user_input = Inputter.get_input("Input: ", is_integer_in_range, [0, 100])
 ```
 As shown in the example to keep the look of printed text the same,
 you should use the print_error and print_warning function of Inputter.
+
+Available built-in constraint functions:
+
+```python
+from inputtr import inputter
+
+inputter.get_confirmation # Will accept ["yes", "y"] and ["no", "n"] and return a bool. This function is case insensitive. 
+inputter.is_integer_in_range # Accepts integers and checks if they are in the range provided by the additional arguments.
+inputter.is_float # Checks if the input can be parsed as a float
+inputter.is_int # Checks if the input can be parsed as a float
+inputter.is_file # Checks if the given path leads to an existing file
+inputter.is_directory # Checks if the given path leads to an existing directory
+inputter.not_empty # Does what the name implies
+```
 
 ### Changing colors and formatting
 ___
